@@ -1,0 +1,182 @@
+{
+  "CAM_01": {
+    "lat": 12.93105,
+    "lon": 80.232791,
+    "name": "T. Nagar",
+    "is_hub": true
+  },
+  "CAM_02": {
+    "lat": 12.938133,
+    "lon": 80.256705,
+    "name": "Adyar",
+    "is_hub": false
+  },
+  "CAM_03": {
+    "lat": 12.950698,
+    "lon": 80.246489,
+    "name": "Velachery",
+    "is_hub": false
+  },
+  "CAM_04": {
+    "lat": 12.976241,
+    "lon": 80.256707,
+    "name": "Guindy",
+    "is_hub": false
+  },
+  "CAM_05": {
+    "lat": 12.961718,
+    "lon": 80.243039,
+    "name": "Anna Nagar",
+    "is_hub": false
+  },
+  "CAM_06": {
+    "lat": 12.930177,
+    "lon": 80.230206,
+    "name": "Mylapore",
+    "is_hub": false
+  },
+  "CAM_07": {
+    "lat": 12.982212,
+    "lon": 80.257903,
+    "name": "Perungudi",
+    "is_hub": false
+  },
+  "CAM_08": {
+    "lat": 12.940488,
+    "lon": 80.232721,
+    "name": "Thoraipakkam (OMR)",
+    "is_hub": false
+  },
+  "CAM_09": {
+    "lat": 12.933895,
+    "lon": 80.231463,
+    "name": "Sholinganallur",
+    "is_hub": false
+  },
+  "CAM_10": {
+    "lat": 12.972429,
+    "lon": 80.239807,
+    "name": "Tambaram",
+    "is_hub": true
+  },
+  "CAM_11": {
+    "lat": 12.946557,
+    "lon": 80.244867,
+    "name": "Nungambakkam",
+    "is_hub": false
+  },
+  "CAM_12": {
+    "lat": 12.987253,
+    "lon": 80.254096,
+    "name": "Egmore",
+    "is_hub": false
+  },
+  "CAM_13": {
+    "lat": 12.934621,
+    "lon": 80.238978,
+    "name": "Porur",
+    "is_hub": false
+  },
+  "CAM_14": {
+    "lat": 12.968029,
+    "lon": 80.234501,
+    "name": "Kodambakkam",
+    "is_hub": true
+  },
+  "CAM_15": {
+    "lat": 12.964172,
+    "lon": 80.246981,
+    "name": "Vadapalani",
+    "is_hub": false
+  },
+  "CAM_16": {
+    "lat": 12.953731,
+    "lon": 80.24499,
+    "name": "Chromepet",
+    "is_hub": false
+  },
+  "CAM_17": {
+    "lat": 12.972432,
+    "lon": 80.239777,
+    "name": "Pallavaram",
+    "is_hub": false
+  },
+  "CAM_18": {
+    "lat": 12.965404,
+    "lon": 80.25169,
+    "name": "Medavakkam",
+    "is_hub": false
+  },
+  "CAM_19": {
+    "lat": 12.969989,
+    "lon": 80.233885,
+    "name": "Kelambakkam",
+    "is_hub": false
+  },
+  "CAM_20": {
+    "lat": 12.960329,
+    "lon": 80.237149,
+    "name": "Navalur",
+    "is_hub": true
+  },
+  "CAM_21": {
+    "lat": 12.950649,
+    "lon": 80.237092,
+    "name": "Siruseri",
+    "is_hub": false
+  },
+  "CAM_22": {
+    "lat": 12.938415,
+    "lon": 80.257097,
+    "name": "Karapakkam",
+    "is_hub": true
+  },
+  "CAM_23": {
+    "lat": 12.965642,
+    "lon": 80.263924,
+    "name": "Sithalapakkam",
+    "is_hub": false
+  },
+  "CAM_24": {
+    "lat": 12.962381,
+    "lon": 80.263875,
+    "name": "Madipakkam",
+    "is_hub": false
+  },
+  "CAM_25": {
+    "lat": 12.971435,
+    "lon": 80.248526,
+    "name": "Pallikaranai",
+    "is_hub": false
+  },
+  "CAM_26": {
+    "lat": 12.966912,
+    "lon": 80.229575,
+    "name": "Alandur",
+    "is_hub": false
+  },
+  "CAM_27": {
+    "lat": 12.929216,
+    "lon": 80.250549,
+    "name": "Saidapet",
+    "is_hub": true
+  },
+  "CAM_28": {
+    "lat": 12.93867,
+    "lon": 80.235031,
+    "name": "Teynampet",
+    "is_hub": false
+  },
+  "CAM_29": {
+    "lat": 12.958318,
+    "lon": 80.248178,
+    "name": "Besant Nagar",
+    "is_hub": false
+  },
+  "CAM_30": {
+    "lat": 12.967245,
+    "lon": 80.24246,
+    "name": "ECR Junction",
+    "is_hub": false
+  }
+}
