@@ -1,7 +1,10 @@
 import json
 import os
+import shutil
 import sqlite3
+import subprocess
 import sys
+import urllib.request
 from pathlib import Path
 
 import numpy as np
@@ -36,6 +39,18 @@ COLOR_PROB = "#f59e0b"        # amber
 COLOR_GNN = "#8b5cf6"         # purple
 COLOR_TRUTH = "#16a34a"       # green
 COLOR_WRONG = "#dc2626"       # red
+
+# -- Live Intersection View tab: launches smart_traffic_ppo's standalone
+# scripts/live_intersection_view.py (own repo, own global Python -- NOT this
+# dashboard's venv, same cross-venv-subprocess pattern run_end_to_end.py
+# uses everywhere else) as a background process and embeds its MJPEG stream.
+# E:/sih/round2/frontend_and_database/Database-model-integration -> up 4 -> E:/sih
+_SIH_ROOT = Path(__file__).resolve().parents[3]
+_STP_ROOT = _SIH_ROOT / "smart_traffic_ppo" / "smart_traffic_ppo"
+LIVE_VIEW_SCRIPT = _STP_ROOT / "scripts" / "live_intersection_view.py"
+LIVE_VIEW_DEFAULT_MODEL = _STP_ROOT / "models" / "ppo_normal_mlp_best.pth"
+LIVE_VIEW_DEFAULT_VIDEO = _SIH_ROOT / "round2" / "homography_input_traffic" / "demo_video.mp4"
+LIVE_VIEW_PORT = 9000
 
 st.set_page_config(
     page_title="ANPR Trajectory Dashboard",
@@ -1240,28 +1255,135 @@ def render_route_prediction_tab():
         st.dataframe(df, use_container_width=True, hide_index=True)
 
 
+# ---------------------------------------------------------------------------
+# Live Intersection View: smart_traffic_ppo standalone, "when working with
+# smart_traffic_ppo alone" (no ANPR/plates/violations) -- all 4 roads'
+# camera feeds with live YOLO vehicle-detection boxes, arranged around a
+# center panel showing the static adjacency matrix and the PPO agent's
+# current per-road red/yellow/green signal state. Runs as a background
+# subprocess (smart_traffic_ppo's own global Python, not this venv) that
+# serves an MJPEG stream over plain HTTP; this tab just starts/stops it and
+# embeds the stream in an <img> tag, which decodes MJPEG natively -- no
+# extra JS or video player needed.
+# ---------------------------------------------------------------------------
+def _live_view_running() -> bool:
+    try:
+        with urllib.request.urlopen(f"http://localhost:{LIVE_VIEW_PORT}/", timeout=1):
+            return True
+    except Exception:
+        return False
+
+
+def _start_live_view(north, south, east, west, model_path):
+    py_exe = shutil.which("py") or shutil.which("python")
+    cmd = [py_exe, str(LIVE_VIEW_SCRIPT),
+           "--north", north, "--south", south, "--east", east, "--west", west,
+           "--phase-source", "agent", "--model", model_path,
+           "--port", str(LIVE_VIEW_PORT)]
+    proc = subprocess.Popen(cmd, cwd=str(_STP_ROOT))
+    st.session_state["live_view_proc"] = proc
+
+
+def _stop_live_view():
+    proc = st.session_state.get("live_view_proc")
+    if proc is not None and proc.poll() is None:
+        proc.terminate()
+    st.session_state["live_view_proc"] = None
+
+
+def render_live_view_tab():
+    st.caption(
+        "Standalone smart_traffic_ppo view -- no ANPR/plates/violations, just all 4 approaches' "
+        "camera feeds with live vehicle-detection boxes, the static adjacency matrix, and the "
+        "PPO agent's current signal decision for each road. Runs "
+        "scripts/live_intersection_view.py as a background process on its own port."
+    )
+
+    if not LIVE_VIEW_SCRIPT.exists():
+        st.error(f"Script not found: {LIVE_VIEW_SCRIPT}")
+        return
+    if not LIVE_VIEW_DEFAULT_MODEL.exists():
+        st.warning(f"Default PPO checkpoint not found: {LIVE_VIEW_DEFAULT_MODEL} -- "
+                   f"set a custom path below before starting.")
+
+    proc = st.session_state.get("live_view_proc")
+    is_running = (proc is not None and proc.poll() is None) or _live_view_running()
+
+    with st.expander("Video sources & model", expanded=not is_running):
+        c1, c2 = st.columns(2)
+        with c1:
+            north = st.text_input("North video", value=str(LIVE_VIEW_DEFAULT_VIDEO), key="lv_north")
+            south = st.text_input("South video", value=str(LIVE_VIEW_DEFAULT_VIDEO), key="lv_south")
+        with c2:
+            east = st.text_input("East video", value=str(LIVE_VIEW_DEFAULT_VIDEO), key="lv_east")
+            west = st.text_input("West video", value=str(LIVE_VIEW_DEFAULT_VIDEO), key="lv_west")
+        model_path = st.text_input("PPO checkpoint", value=str(LIVE_VIEW_DEFAULT_MODEL), key="lv_model")
+
+    b1, b2 = st.columns(2)
+    with b1:
+        if st.button("Start live view", disabled=is_running, type="primary"):
+            _start_live_view(north, south, east, west, model_path)
+            st.rerun()
+    with b2:
+        if st.button("Stop live view", disabled=not is_running):
+            _stop_live_view()
+            st.rerun()
+
+    if is_running:
+        st.success(f"Running -- stream at http://localhost:{LIVE_VIEW_PORT}/stream")
+        st.markdown(
+            f"<img src='http://localhost:{LIVE_VIEW_PORT}/stream?nocache={id(proc)}' "
+            f"style='width:100%;border-radius:4px' />",
+            unsafe_allow_html=True,
+        )
+        st.caption(
+            "Signal colours: green/red are the PPO agent's actual current phase; yellow is a "
+            "wall-clock display simplification shown briefly right after a detected phase "
+            "transition (SumoFreeIntersectionEnv only reports settled green phases, not a live "
+            "yellow state -- see live_intersection_view.py's own docstring)."
+        )
+    else:
+        st.info("Not running. Set video sources above and click **Start live view**.")
+
+
 def main():
     st.title("🚗 ANPR Trajectory Dashboard")
     st.caption("Local SQLite dashboard for trajectory-model data.")
 
+    plates = []
+    db_error = None
     try:
         plates = get_plates()
     except FileNotFoundError as error:
-        st.error(str(error))
-        return
+        db_error = str(error)
     except Exception as error:
-        st.error(f"Could not open the SQLite database: {error}")
-        return
-
-    if not plates:
-        st.warning("No vehicle records exist in the database.")
-        return
+        db_error = f"Could not open the SQLite database: {error}"
 
     (tab_trajectory, tab_analytics, tab_alerts, tab_violations,
-     tab_prediction, tab_route_prediction) = st.tabs(
+     tab_prediction, tab_route_prediction, tab_live_view) = st.tabs(
         ["Trajectory", "City Analytics", "Alerts", "Violations",
-         "Next-camera prediction", "Route Prediction"]
+         "Next-camera prediction", "Route Prediction", "Live Intersection View"]
     )
+
+    # Live Intersection View is standalone by design (see its own docstring)
+    # -- it needs none of this database's plate data, so it renders even if
+    # the DB is empty or unreachable, unlike every other tab below.
+    with tab_live_view:
+        render_live_view_tab()
+
+    if db_error:
+        for tab in (tab_trajectory, tab_analytics, tab_alerts, tab_violations,
+                    tab_prediction, tab_route_prediction):
+            with tab:
+                st.error(db_error)
+        return
+    if not plates:
+        for tab in (tab_trajectory, tab_analytics, tab_alerts, tab_violations,
+                    tab_prediction, tab_route_prediction):
+            with tab:
+                st.warning("No vehicle records exist in the database.")
+        return
+
     with tab_trajectory:
         render_trajectory_tab(plates)
     with tab_analytics:
