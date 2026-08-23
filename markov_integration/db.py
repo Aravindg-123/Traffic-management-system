@@ -37,7 +37,7 @@ _COLUMNS = (
 
 _SELECT_SQL = """
     SELECT
-        event_id,
+        rowid AS event_id,
         sim_time,
         camera_id,
         camera_lon,
