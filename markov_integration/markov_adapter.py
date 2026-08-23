@@ -282,6 +282,22 @@ class MarkovAdapter:
             "explanation": explanation,
         }
 
+    def roll_out_future_path(
+        self, history: List[str], steps: int = 2, top_k: int = TOP_K
+    ) -> List[str]:
+        """Greedy multi-step rollout: repeatedly predict the top-1 next camera
+        and append it to the working history."""
+        working = list(history)
+        path: List[str] = []
+        for _ in range(steps):
+            result = self.predict(working, top_k=top_k)
+            if not result["input_valid"] or not result["top_predictions"]:
+                break
+            next_cam = result["top_predictions"][0]["camera_id"]
+            path.append(next_cam)
+            working.append(next_cam)
+        return path
+
     def _invalid_response(
         self, history: List[str], reason: str
     ) -> Dict[str, Any]:

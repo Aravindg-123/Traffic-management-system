@@ -1,0 +1,11 @@
+{
+  "graph_nodes": 30,
+  "graph_edges": 235,
+  "n_train_vehicles": 3565,
+  "n_test_vehicles": 891,
+  "n_samples_scored": 369,
+  "top1_accuracy": 0.5853658536585366,
+  "top3_accuracy": 0.8753387533875339,
+  "baseline_top1_accuracy": 0.4444444444444444,
+  "note": "Computed with trajectory_project's own main.py/scorer.py logic unmodified, which builds training samples from the same split used for evaluation (see build_training_samples(test_trajs, ...) in main.py) -- so this reflects fit-to-that-split performance, not accuracy on vehicles unseen during training."
+}
