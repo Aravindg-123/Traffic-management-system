@@ -59,15 +59,27 @@ st.set_page_config(
 )
 
 
-@st.cache_resource
 def get_connection():
+    """Deliberately NOT @st.cache_resource'd. This DB is written throughout
+    a demo by several independent external processes (the live pipeline,
+    replay_demo.py, manage_blacklist.py) under WAL mode -- a single
+    connection object cached for the dashboard process's entire lifetime
+    can go stale relative to those external writes and start raising
+    'bad parameter or other API misuse' from pandas.read_sql_query on an
+    otherwise-valid query (reproduced and confirmed this session: the same
+    query succeeds against a fresh connection). Opening a new connection
+    per call is sub-millisecond and always reflects the current file state,
+    which matters far more here than the (negligible, for a local
+    single-user dashboard) cost of not pooling it."""
     if not DB_PATH.exists():
         raise FileNotFoundError(
             f"Database not found at {DB_PATH}. Run: python repair_sqlite_import.py "
             f"--csv handoff_package_v2/anpr_hits_final.csv --db anpr_demo_fixed.db"
         )
 
-    return sqlite3.connect(DB_PATH, check_same_thread=False)
+    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+    conn.execute("PRAGMA busy_timeout = 3000")  # wait up to 3s on a lock from a concurrent writer
+    return conn
 
 
 @st.cache_resource
